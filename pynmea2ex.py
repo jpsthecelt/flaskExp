@@ -19,15 +19,18 @@ def parseGPS(str):
 
 try:
     with serial.Serial("/dev/serial0", 9600, timeout=0.5) as gIn:
-        for i in range(10):
+        for i in range(5):
             data = gIn.readline().decode('ascii', errors='replace')
-            print("Initial read; clearing out initial data: {data}")
+            print("Initial read; clearing out initial data: {data}", data)
             
         while True:
-            print(parse(gIn.readline().decode('ascii', errors='replace')))
-#            str = gIn.readline().decode('ascii', errors='replace')
-#            for msg in gStream.next():
-#                print(parseGPS(str))
+#           data = gIn.readline().decode('ascii', errors='replace')
+#           newData = pynmea2.parse(data)
+#            print(json.dumps(newData))
+            str = gIn.readline().decode('ascii', errors='replace')
+            print(parseGPS(str))
+            for msg in gIn.next():
+                print(parseGPS(str))
 
 except (KeyboardInterrupt,SystemExit):
     print("...Terminated!")
