@@ -19,10 +19,15 @@ def parseGPS(str):
 
 try:
     with serial.Serial("/dev/serial0", 9600, timeout=0.5) as gIn:
-    while True:
-        str = gIn.readline().decode()
-        for msg in gStream.next():
-            print(parseGPS(str))
+        for i in range(10):
+            data = gIn.readline().decode('ascii', errors='replace')
+            print("Initial read; clearing out initial data: {data}")
+            
+        while True:
+            print(parse(gIn.readline().decode('ascii', errors='replace')))
+#            str = gIn.readline().decode('ascii', errors='replace')
+#            for msg in gStream.next():
+#                print(parseGPS(str))
 
 except (KeyboardInterrupt,SystemExit):
     print("...Terminated!")
