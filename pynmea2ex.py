@@ -17,7 +17,7 @@ def parseGPS(rawMesg):
 
 try:
     with serial.Serial("/dev/serial0", 9600, timeout=0.5) as gIn:
-        print("Initial data synchronization: %s", [gIn.readline().decode('ascii', errors='replace') for i in range(5)])
+        [print("Initial data synchronization: {}".format(gIn.readline().decode('ascii', errors='replace'))) for i in range(5)]
             
         while True:
             print("parsed output message is: ", parseGPS(gIn.readline().decode('ascii', errors='replace')))
