@@ -21,16 +21,19 @@ try:
     with serial.Serial("/dev/serial0", 9600, timeout=0.5) as gIn:
         for i in range(5):
             data = gIn.readline().decode('ascii', errors='replace')
-            print("Initial read; clearing out initial data: {data}", data)
+            print("Initial read; clearing out initial data: {}", data)
             
+        streamReader = pynmea2.NMEAStreamReader()
         while True:
 #           data = gIn.readline().decode('ascii', errors='replace')
 #           newData = pynmea2.parse(data)
 #            print(json.dumps(newData))
-            str = gIn.readline().decode('ascii', errors='replace')
-            print(parseGPS(str))
-            for msg in gIn.next():
-                print(parseGPS(str))
+#           data = gIn.readline().decode('ascii', errors='replace')
+            data = gIn.read()
+            for msg in streamReader.next(data):
+                print("message is: {}",msg)
+#            for msg in gIn.next():
+#                print(msg)
 
 except (KeyboardInterrupt,SystemExit):
     print("...Terminated!")
