@@ -7,7 +7,6 @@ def parseGPS(rawMesg):
     try:
         msg = pynmea2.parse(rawMesg)
     except pynmea2.ParseError:
-#       print("Discarded message: {}".format(rawMesg))
         return str("{"+"Parse Error: {}".format(rawMesg)+"}")
 
     if msg.sentence_type != 'GGA':
@@ -18,8 +17,7 @@ def parseGPS(rawMesg):
 
 try:
     with serial.Serial("/dev/serial0", 9600, timeout=0.5) as gIn:
-        for i in range(5):
-            print("Initial data synchronization: %s", gIn.readline().decode('ascii', errors='replace'))
+        print("Initial data synchronization: %s", [gIn.readline().decode('ascii', errors='replace') for i in range(5)])
             
         while True:
             print("parsed output message is: ", parseGPS(gIn.readline().decode('ascii', errors='replace')))
