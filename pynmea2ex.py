@@ -2,6 +2,7 @@ import sys
 import serial
 import pynmea2
 import json
+import time
 from collections import deque
 
 # Given an NMEA input string, parse and either return it's T/S, alt, lat/lon, etc (as a JSON dict) from the GGA message,
@@ -27,13 +28,14 @@ try:
     # Initialize discardQ list and and serial-inpuyt channel; clearing out any 'framing errors' in receiving-channel 
     #            (we chose to clear out 5 of them)
     QMAX = 100
-    discardQ = dequeue(maxlen=QMAX)
+    discardQ = deque(maxlen=QMAX)
     with serial.Serial("/dev/serial0", 9600, timeout=0.5) as gIn:
         [print("Synchronizing...: {}".format(gIn.readline().decode('ascii', errors='replace'))) for i in range(5)]
             
         # Then, while it is possible to read messages from the serial-input
         while True:
             print(parseGPS(gIn.readline().decode('ascii', errors='replace')))
+            time.sleep(1)
 
 # process any system-exit errors or ^c received, outputting our discardQ contents 'before we go'
 except (KeyboardInterrupt,SystemExit):
