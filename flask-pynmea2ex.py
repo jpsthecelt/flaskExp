@@ -2,7 +2,9 @@ import sys
 import serial
 import pynmea2
 import json
-from flask import flask,jsonify
+from flask import Flask,jsonify
+import pdb
+import time
 
 def parseGPS(rawMesg):
     try:
@@ -19,17 +21,19 @@ def parseGPS(rawMesg):
         return str("{{Timestamp: {}, Lat: {} {} ,  Lon: {} {}, Altitude: {} {}}}".format(
                   msg.timestamp,msg.lat or 0.0,msg.lat_dir,msg.lon or 0.0,msg.lon_dir,msg.altitude or 0.0,msg.altitude_units or 'M'))
 
-@app.route(('/')
+@app.route('/')
 def mainGPS():
-    runner;
+    runner()
 
 def runner():
     try:
+        pdb.set_trace()
         with serial.Serial("/dev/serial0", 9600, timeout=0.5) as gIn:
             [print("Synchronizing...: {}".format(gIn.readline().decode('ascii', errors='replace'))) for i in range(5)]
                 
             while True:
                 print(parseGPS(gIn.readline().decode('ascii', errors='replace')))
+                time.sleep(1)
     
     except (KeyboardInterrupt,SystemExit):
         print("...Terminated!")
