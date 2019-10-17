@@ -27,7 +27,8 @@ def parseGPS(rawMesg, discardIt):
         else:
             return ("")
     else:
-        return (f"{{Timestamp: {msg.timestamp}, Lat: {msg.lat or 0.0} {msg.lat_dir} ,  Lon: {msg.lon or 0.0} {msg.lon_dir}, Altitude: {msg.altitude or 0.0} {msg.altitude_units or 'm'}}}")
+        fix = msg.gps_qual == 2 
+        return (f"{{Timestamp: {msg.timestamp}, Lat: {msg.lat or 0.0} {msg.lat_dir} ,  Lon: {msg.lon or 0.0} {msg.lon_dir}, Altitude: {msg.altitude or 0.0} {msg.altitude_units or 'm'} Fix: {fix} Satellites: {msg.gps_num_sats}}}")
 
 
 try:
