@@ -1,3 +1,5 @@
+serial
+pynmea2
 -i https://pypi.org/simple
 aniso8601==6.0.0
 attrs==19.1.0

@@ -2,12 +2,12 @@ import sys
 import serial
 import pynmea2
 import json
-from concurrent.futures import threading,lock
+import threading
 import atexit
 from flask import Flask,jsonify
 
 from time import gmtime, sleep
-from collections import deue
+from collections import deque
 
 POOL_TIME = 1
 class NmeaMsg(dict):
@@ -35,19 +35,19 @@ class NmeaStore:
         self.value = _currentNmea
         self._lock = threading.Lock()
 
-    def lck_putData(self, nMsg):
+    def lck_putdata(self, nmsg):
         with self._lock:
-            self.value = nMsg
+            self.value = nmsg
 
-    def lck_getData(self):
+    def lck_getdata(self):
         with self._lock:
             return(self.value)
 
 # Given an NMEA input string, parse and either return it's T/S, alt, lat/lon, etc (as a JSON dict) from the GGA message,
 #       or add message-type to the discardQ (returning JSON dict message), or return parse-error message.
+# try parsing NMEA message - if it fails, return error
+#                            if it succeeds, look for a message type of 'GGA'
 def parseGPS(rawMesg):
-    # try parsing NMEA message - if it fails, return error
-    #                            if it succeeds, look for a message type of 'GGA'
     try:
         msg = pynmea2.parse(rawMesg)
     except pynmea2.ParseError:
@@ -117,6 +117,7 @@ def create_app():
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
     atexit.register(interrupt)
     return app
-
-app = create_app()
+if __name__ = '__main__':
+    create_app()
+#    app = create_app()
 
