@@ -65,22 +65,13 @@ def parseGPS(raw_mesg, discardIt):
 
 def update_gps():
     try:
-        # Initialize discardQ list and and serial-input channel; clearing out any 'framing errors' in receiving-channel 
-        #            (we chose to clear out 5 of them)
-        QMAX = 100
-        discardQ = deque(maxlen=QMAX)
-        parser = argparse.ArgumentParser(description='Grab and display incoming GPS messages via flask website')
-        parser.add_argument('-v', default=False, action='store_true', help='print all discarded messages ')
-        parser.add_argument('gps_device_string', action='store', default='/dev/serial0', help='device from which we will connect for GPS messages')
-        results = parser.parse_args()
-    
         with serial.Serial(results.gps_device_string, 9600, timeout=0.5) as gIn:
             [print("Synchronizing...: {}".format(gIn.readline().decode('ascii', errors='replace'))) for i in range(5)]
                 
             # Then, while it is possible to read messages from the serial-input, read & parse input data
             #       printing out result
             while True:
-                print(parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v))
+                print(json.dumps(parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v)))
                 time.sleep(1)
     
     # process any system-exit errors or ^c received, outputting our discardQ contents 'before we go'
@@ -90,4 +81,13 @@ def update_gps():
         sys.exit()
 
 if __name__ == '__main__':
+    # Initialize discardQ list and and serial-input channel; clearing out any 'framing errors' in receiving-channel 
+    #            (we chose to clear out 5 of them)
+    QMAX = 100
+    discardQ = deque(maxlen=QMAX)
+    parser = argparse.ArgumentParser(description='Grab and display incoming GPS messages via flask website')
+    parser.add_argument('-v', default=False, action='store_true', help='print all discarded messages ')
+    parser.add_argument('gps_device_string', action='store', default='/dev/serial0', help='device from which we will connect for GPS messages')
+    results = parser.parse_args()
+    
     update_gps()
