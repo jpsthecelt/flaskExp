@@ -98,7 +98,7 @@ def interrupt():
 if __name__ == '__main__':
     # Initialize discardQ list and and serial-input channel; clearing out any 'framing errors' in receiving-channel 
     #            (we chose to clear out 5 of them)
-    format = f"{asctime}: {message}"
+    format = "%(asctime)s: %(message)s"
     logging.basicConfig(format=format, level=logging.INFO,
                         datefmt="%H:%M:%S")
     logging.getLogger().setLevel(logging.INFO)
