@@ -11,6 +11,7 @@ from collections import deque
 import atexit
 import threading
 from flask import Flask,jsonify
+import logging
 
 GPS_CYCLE_TIME = 1
 
@@ -21,7 +22,7 @@ class nmea_msg(dict):
     def __getattr__(self, attr):
         return self[attr]
 
-nmea_current = nmea_msg(
+_current_nmea = nmea_msg(
      timestamp = gmtime(),
      lat =       0.0,
      lat_dir =   '0',
@@ -42,6 +43,7 @@ def parseGPS(raw_mesg, discardIt):
     # try parsing NMEA message - if it fails, return error
     #                            if it succeeds, look for a message type of 'GGA'
     try:
+        logging.info('attempting to parse NMEA message...')
         msg = pynmea2.parse(raw_mesg)
     except pynmea2.ParseError:
         return ( nmea_msg(timestamp = gmtime(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, alt_units='M',
@@ -50,6 +52,7 @@ def parseGPS(raw_mesg, discardIt):
     # if msg-type is not GGA, add the message to the discarded-Q and return appropriate error-message
     # if the msg-type IS GGA, return the timestamp/altitude-lat-lon, etc information
     if msg.sentence_type != 'GGA':
+        logging.info('attempting to add discarded message to Q...')
         discardQ.append(msg.sentence_type)
         if discardIt:
             return ( nmea_msg(timestamp = gmtime(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, alt_units='M',
@@ -65,24 +68,41 @@ def parseGPS(raw_mesg, discardIt):
 
 def update_gps():
     try:
+        logging.info('attempting attach serial-device & obtain messages...')
         with serial.Serial(results.gps_device_string, 9600, timeout=0.5) as gIn:
             [print("Synchronizing...: {}".format(gIn.readline().decode('ascii', errors='replace'))) for i in range(5)]
                 
             # Then, while it is possible to read messages from the serial-input, read & parse input data
             #       printing out result
             while True:
-                print(json.dumps(parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v)))
+                new_nmea_value = parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v)
+                logging.info('got new nmea-message; updating...')
+                with db_lock:
+                    _current_nmea = new_nmea_value
+
+                print(json.dumps(new_nmea_value))
+                print(json.dumps(_current_nmea))
                 time.sleep(1)
     
     # process any system-exit errors or ^c received, outputting our discardQ contents 'before we go'
     except (KeyboardInterrupt,SystemExit):
+        gps_update_thread.cancel()
         print("...Terminated!")
         print(f"Last {len(discardQ)} discarded messages were {discardQ}\n\n")
         sys.exit()
 
+def interrupt():
+    logging.info('got interrupt)...')
+    gps_update_thread.cancel()
+
 if __name__ == '__main__':
     # Initialize discardQ list and and serial-input channel; clearing out any 'framing errors' in receiving-channel 
     #            (we chose to clear out 5 of them)
+    format = f"{asctime}: {message}"
+    logging.basicConfig(format=format, level=logging.INFO,
+                        datefmt="%H:%M:%S")
+    logging.getLogger().setLevel(logging.INFO)
+
     QMAX = 100
     discardQ = deque(maxlen=QMAX)
     parser = argparse.ArgumentParser(description='Grab and display incoming GPS messages via flask website')
@@ -90,4 +110,12 @@ if __name__ == '__main__':
     parser.add_argument('gps_device_string', action='store', default='/dev/serial0', help='device from which we will connect for GPS messages')
     results = parser.parse_args()
     
-    update_gps()
+    db_lock = threading.Lock()
+    gps_update_thread = threading.Timer(GPS_CYCLE_TIME, update_gps, ())
+    atexit.register(interrupt)
+    gps_update_thread.start()
+
+    logging.info('main starting wait')
+    while True:
+        sleep(5)
+        logging.info('main (after sleep)...')
