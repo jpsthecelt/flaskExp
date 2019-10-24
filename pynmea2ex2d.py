@@ -119,6 +119,10 @@ if __name__ == '__main__':
     gps_update_thread.start()
 
     logging.info('main starting wait')
+    print("\nmain: before loop; dumping _current_nmea)",json.dumps(_current_nmea))
     while True:
         sleep(5)
         logging.info('main (after sleep)...')
+
+        with db_lock:
+            print("\nin main; dumping _current_nmea)",json.dumps(_current_nmea))
