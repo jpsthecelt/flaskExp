@@ -2,7 +2,7 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="d5086e53-e66a-49d6-bbcd-5e66ee885cfc" name="192.168.1.139" url="http://192.168.1.139">
+      <webServer id="d5086e53-e66a-49d6-bbcd-5e66ee885cfc" name="192.168.1.139" url="http://192.168.1.139:5000">
         <fileTransfer host="192.168.1.139" port="22" rootFolder="/home/pi/dev/" accessType="SFTP">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
