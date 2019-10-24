@@ -77,14 +77,13 @@ def update_gps():
             while True:
                 new_nmea_value = parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v)
                 logging.info('got new nmea-message; updating...')
+                print("\nNew NMEA message looks like:",json.dumps(new_nmea_value))
                 with db_lock:
                     _current_nmea = new_nmea_value
 
-                print("\nNew NMEA message",json.dumps(new_nmea_value))
                 del new_nmea_value
 
-                print("\nCurrent NMEA message",json.dumps(_current_nmea))
-                print(json.dumps(_current_nmea))
+                print("\nUpdated current NMEA message looks like:",json.dumps(_current_nmea))
                 time.sleep(1)
     
     # process any system-exit errors or ^c received, outputting our discardQ contents 'before we go'
