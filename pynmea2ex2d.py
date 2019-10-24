@@ -80,7 +80,10 @@ def update_gps():
                 with db_lock:
                     _current_nmea = new_nmea_value
 
-                print(json.dumps(new_nmea_value))
+                print("\nNew NMEA message",json.dumps(new_nmea_value))
+                del new_nmea_value
+
+                print("\nCurrent NMEA message",json.dumps(_current_nmea))
                 print(json.dumps(_current_nmea))
                 time.sleep(1)
     
