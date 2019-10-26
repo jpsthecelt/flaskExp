@@ -78,7 +78,7 @@ def update_gps():
             while True:
                 new_nmea_value = parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v)
                 logging.info('got new nmea-message; updating...')
-                print("\nNew NMEA message value looks like:",new_nmea_value)
+                print("\nNew NMEA message value looks like:",json.dumps(new_nmea_value))
                 with db_lock:
                     _current_nmea = new_nmea_value
                 del new_nmea_value
