@@ -30,7 +30,7 @@ _current_nmea = nmea_msg(
      lon =       0.0,
      lon_dir =   '0',
      altitude =  0.0,
-     alt_units = 'M',
+     altitude_units = 'M',
      got_fix =   False,
      num_sats =  0,
      error_msg = ''
@@ -44,27 +44,26 @@ def parseGPS(raw_mesg, discardIt):
     # try parsing NMEA message - if it fails, return error
     #                            if it succeeds, look for a message type of 'GGA'
     try:
-        logging.info('attempting to parse NMEA message...')
         msg = pynmea2.parse(raw_mesg)
     except pynmea2.ParseError:
-        return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, alt_units='M',
-             got_fix=False, num_sats=0, error_msg=f"Parse-Error: {raw_mesg}"))
+        logging.info('Failed to parse NMEA message...')
+        return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M',
+             got_fix=False, num_sats=0, error_msg="Parse-Error: %s" & raw_mesg))
 
     # if msg-type is not GGA, add the message to the discarded-Q and return appropriate error-message
     # if the msg-type IS GGA, return the timestamp/altitude-lat-lon, etc information
     if msg.sentence_type != 'GGA':
-        logging.info('attempting to add discarded message to Q...')
         discardQ.append(msg.sentence_type)
         if discardIt:
-            return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, alt_units='M',
-                 got_fix=False, num_sats=0, error_msg=f"Discarded: {msg.sentence_type}"))
+            return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M',
+                 got_fix=False, num_sats=0, error_msg="Discarded: %s" % msg.sentence_type))
         else:
-            return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, alt_units='M',
-                 got_fix=False, num_sats=0, error_msg=f"Not-Discarded: {msg.sentence_type}"))
+            return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M',
+                 got_fix=False, num_sats=0, error_msg="Not-Discarded: %s" % msg.sentence_type))
     else:
         # (recall that gps_qual == 0 is 'no fix', or fix=False, 1 == fix, 2-5 are fix-other)
         fix = msg.gps_qual == 1 
-        print("\nNew NMEA message before return:",json.dumps(msg))
+        logging.info('\nNew NMEA message before return')
         return (nmea_msg(timestamp=msg.timestamp, lat=(msg.lat or 0.0), lat_dir=msg.lat_dir, lon=(msg.lon or 0.0), lon_dir=msg.lon_dir, 
                 altitude=(msg.altitude or 0.0), altitude_units=(msg.altitude_units or 'M'), got_fix=fix, num_sats=0, error_msg=''))
 
