@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 from collections import deque
 import argparse
-from time import gmtime, sleep
+from time import sleep
 from collections import deque
 
 import atexit
@@ -47,7 +47,7 @@ def parseGPS(raw_mesg, discardIt):
         logging.info('attempting to parse NMEA message...')
         msg = pynmea2.parse(raw_mesg)
     except pynmea2.ParseError:
-        return ( nmea_msg(timestamp = gmtime(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, alt_units='M',
+        return ( nmea_msg(timestamp = datetime.timestamp(datetime.now()), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, alt_units='M',
              got_fix=False, num_sats=0, error_msg=f"Parse-Error: {raw_mesg}"))
 
     # if msg-type is not GGA, add the message to the discarded-Q and return appropriate error-message
@@ -56,10 +56,10 @@ def parseGPS(raw_mesg, discardIt):
         logging.info('attempting to add discarded message to Q...')
         discardQ.append(msg.sentence_type)
         if discardIt:
-            return ( nmea_msg(timestamp = gmtime(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, alt_units='M',
+            return ( nmea_msg(timestamp = datetime.timestamp(datetime.now()), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, alt_units='M',
                  got_fix=False, num_sats=0, error_msg=f"Discarded: {msg.sentence_type}"))
         else:
-            return ( nmea_msg(timestamp = gmtime(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, alt_units='M',
+            return ( nmea_msg(timestamp = datetime.timestamp(datetime.now()), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, alt_units='M',
                  got_fix=False, num_sats=0, error_msg=f"Not-Discarded: {msg.sentence_type}"))
     else:
         # (recall that gps_qual == 0 is 'no fix', or fix=False, 1 == fix, 2-5 are fix-other)
@@ -112,6 +112,7 @@ if __name__ == '__main__':
     parser.add_argument('gps_device_string', action='store', default='/dev/serial0', help='device from which we will connect for GPS messages')
     results = parser.parse_args()
     
+    print("\nInitial current NMEA message looks like:",json.dumps(_current_nmea))
     db_lock = threading.Lock()
     gps_update_thread = threading.Timer(GPS_CYCLE_TIME, update_gps, ())
     atexit.register(interrupt)
