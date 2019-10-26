@@ -3,6 +3,7 @@ import serial
 import pynmea2
 import json
 import time
+from datetime import datetime
 from collections import deque
 import argparse
 from time import gmtime, sleep
@@ -23,7 +24,7 @@ class nmea_msg(dict):
         return self[attr]
 
 _current_nmea = nmea_msg(
-     timestamp = gmtime(),
+     timestamp = datetime.timestamp(datetime.now()),
      lat =       0.0,
      lat_dir =   '0',
      lon =       0.0,
