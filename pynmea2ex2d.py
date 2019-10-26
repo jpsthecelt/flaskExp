@@ -24,7 +24,7 @@ class nmea_msg(dict):
         return self[attr]
 
 _current_nmea = nmea_msg(
-     timestamp = datetime.timestamp(datetime.now()),
+     timestamp = datetime.now().timestamp(),
      lat =       0.0,
      lat_dir =   '0',
      lon =       0.0,
