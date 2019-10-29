@@ -56,9 +56,9 @@ def parseGPS(raw_mesg, discardIt):
         fix = msg.gps_qual == 1
         discardQ.append(msg.sentence_type)
         if discardIt:
-           em="Discarded: %s" % msg.sentence_type))
+           em="Discarded: %s" % msg.sentence_type
         else:
-           em="Not-Discarded: %s" % msg.sentence_type))
+           em="Not-Discarded: %s" % msg.sentence_type
         logging.info('parseGPS: returning discarded NMEA message...')
         return ( nmea_msg(timestamp = msg.timestamp, lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M', got_fix=fix,
            num_sats=0, error_msg=em))
@@ -84,7 +84,6 @@ def update_gps():
                 with db_lock:
                     _current_nmea_msg = nmea_rxd_msg
                     del nmea_rxd_msg
-
                 print("\nUpdated current NMEA message looks like:",json.dumps(_current_nmea_msg))
                 time.sleep(1)
     
