@@ -52,17 +52,18 @@ def parseGPS(raw_mesg, discardIt):
 
     # if msg-type is not GGA, add the message to the discarded-Q and return appropriate error-message
     # if the msg-type IS GGA, return the timestamp/altitude-lat-lon, etc information
+    fix = msg.gps_qual == 1 
     if msg.sentence_type != 'GGA':
         discardQ.append(msg.sentence_type)
         if discardIt:
-            return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M',
-                 got_fix=False, num_sats=0, error_msg="Discarded: %s" % msg.sentence_type))
+                 error_msg="Discarded: %s" % msg.sentence_type))
         else:
-            return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M',
-                 got_fix=False, num_sats=0, error_msg="Not-Discarded: %s" % msg.sentence_type))
+                 error_msg="Not-Discarded: %s" % msg.sentence_type))
+        return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M', got_fix=fix, 
+            num_sats=0, error_msg))
+
     else:
         # (recall that gps_qual == 0 is 'no fix', or fix=False, 1 == fix, 2-5 are fix-other)
-        fix = msg.gps_qual == 1 
         logging.info('\nNew NMEA message before return')
         return (nmea_msg(timestamp=msg.timestamp, lat=(msg.lat or 0.0), lat_dir=msg.lat_dir, lon=(msg.lon or 0.0), lon_dir=msg.lon_dir, 
                 altitude=(msg.altitude or 0.0), altitude_units=(msg.altitude_units or 'M'), got_fix=fix, num_sats=0, error_msg=''))
@@ -78,7 +79,7 @@ def update_gps():
             while True:
                 new_nmea_value = parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v)
                 logging.info('got new nmea-message; updating...')
-                print("\nNew NMEA message value looks like:",json.dumps(new_nmea_value))
+                print("\nupdate_gps: New NMEA message value looks like:",json.dumps(new_nmea_value))
                 with db_lock:
                     _current_nmea = new_nmea_value
                 del new_nmea_value
