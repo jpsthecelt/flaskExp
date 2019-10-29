@@ -59,6 +59,7 @@ def parseGPS(raw_mesg, discardIt):
            em="Discarded: %s" % msg.sentence_type))
         else:
            em="Not-Discarded: %s" % msg.sentence_type))
+        logging.info('parseGPS: returning discarded NMEA message...')
         return ( nmea_msg(timestamp = msg.timestamp, lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M', got_fix=fix,
            num_sats=0, error_msg=em))
 
