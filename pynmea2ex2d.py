@@ -83,7 +83,7 @@ def update_gps():
                 print("\nupdate_gps: Newly parsed NMEA message looks like:",json.dumps(nmea_rxd_msg))
                 with db_lock:
                     _current_nmea_msg = nmea_rxd_msg
-                    del nmea_rxd_msg
+#                    del nmea_rxd_msg
                 print("\nUpdated current NMEA message looks like:",json.dumps(_current_nmea_msg))
                 time.sleep(1)
     
