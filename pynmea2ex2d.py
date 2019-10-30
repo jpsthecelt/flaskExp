@@ -12,7 +12,7 @@ from collections import deque
 import atexit
 import threading
 from flask import Flask,jsonify
-from copy import deep_copy
+from copy import deepcopy
 import logging
 
 GPS_CYCLE_TIME = 1
@@ -54,14 +54,13 @@ def parseGPS(raw_mesg, discardIt):
     # if msg-type is not GGA, add the message to the discarded-Q and return appropriate error-message
     # if the msg-type IS GGA, return the timestamp/altitude-lat-lon, etc information
     if msg.sentence_type != 'GGA':
-        fix = msg.gps_qual == 1
         discardQ.append(msg.sentence_type)
         if discardIt:
            em="Discarded: %s" % msg.sentence_type
         else:
            em="Not-Discarded: %s" % msg.sentence_type
         logging.info('parseGPS: returning discarded NMEA message...')
-        return ( nmea_msg(timestamp = msg.timestamp, lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M', got_fix=fix,
+        return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M', got_fix=False,
            num_sats=0, error_msg=em))
 
     else:
@@ -79,7 +78,7 @@ def update_gps():
             # Then, while it is possible to read messages from the serial-input, read & parse input data
             #       printing out result
             while True:
-                nmea_rxd_msg = deep_copy(parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v))
+                nmea_rxd_msg = deepcopy(parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v))
                 logging.info('update_gps: parsed new nmea-message; updating _current...')
                 print("\nupdate_gps: Newly parsed NMEA message looks like:",json.dumps(nmea_rxd_msg))
                 with db_lock:
