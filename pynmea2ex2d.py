@@ -12,6 +12,7 @@ from collections import deque
 import atexit
 import threading
 from flask import Flask,jsonify
+from copy import deep_copy
 import logging
 
 GPS_CYCLE_TIME = 1
@@ -78,7 +79,7 @@ def update_gps():
             # Then, while it is possible to read messages from the serial-input, read & parse input data
             #       printing out result
             while True:
-                nmea_rxd_msg = parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v)
+                nmea_rxd_msg = deep_copy(parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v))
                 logging.info('update_gps: parsed new nmea-message; updating _current...')
                 print("\nupdate_gps: Newly parsed NMEA message looks like:",json.dumps(nmea_rxd_msg))
                 with db_lock:
