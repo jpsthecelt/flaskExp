@@ -59,7 +59,7 @@ def parseGPS(raw_mesg, discardIt):
            em="Discarded: %s" % msg.sentence_type
         else:
            em="Not-Discarded: %s" % msg.sentence_type
-        logging.info('parseGPS: returning discarded NMEA message...')
+        logging.info('parseGPS: returning discarded NMEA message...%s' % em)
 #        return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M', got_fix=False,
 #           num_sats=0, error_msg=em))
         return msg
@@ -73,7 +73,7 @@ def parseGPS(raw_mesg, discardIt):
         return msg
 
 def update_gps():
-    try:
+#    try:
         logging.info('attempting attach serial-device & obtain messages...')
         with serial.Serial(results.gps_device_string, 9600, timeout=0.5) as gIn:
             [print("Synchronizing...: {}".format(gIn.readline().decode('ascii', errors='replace'))) for i in range(5)]
@@ -81,23 +81,22 @@ def update_gps():
             # Then, while it is possible to read messages from the serial-input, read & parse input data
             #       printing out result
             while True:
-                nmea_rxd_msg = parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v)
-                logging.info('update_gps: parsed new nmea-message; updating _current...')
-                print("\nupdate_gps: Newly parsed NMEA message looks like:",json.dumps(nmea_rxd_msg))
-#                    del nmea_rxd_msg
-                print("\nUpdated current NMEA message looks like:",json.dumps(_current_nmea_msg))
                 time.sleep(1)
+                nmea_rxd_msg = parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v)
+#                    del nmea_rxd_msg
+                print("\njson.dumps() of updated _current_nmea_msg looks like:",json.dumps(_current_nmea_msg))
     
     # process any system-exit errors or ^c received, outputting our discardQ contents 'before we go'
-    except (KeyboardInterrupt,SystemExit):
-        gps_update_thread.cancel()
-        print("...Terminated!")
-        print(f"Last {len(discardQ)} discarded messages were {discardQ}\n\n")
-        sys.exit()
+#    except (KeyboardInterrupt,SystemExit):
+#        gps_update_thread.cancel()
+#        print("...Terminated!")
+#        print(f"Last {len(discardQ)} discarded messages were {discardQ}\n\n")
+#        sys.exit()
 
 def interrupt():
     logging.info('got interrupt)...')
     gps_update_thread.cancel()
+    exit()
 
 if __name__ == '__main__':
     # Initialize discardQ list and and serial-input channel; clearing out any 'framing errors' in receiving-channel 
@@ -120,13 +119,18 @@ if __name__ == '__main__':
     atexit.register(interrupt)
     gps_update_thread.start()
 
-    logging.info('main starting wait')
-    while True:
-        sleep(5)
-        logging.info('main (after sleep)...')
+    try:
+        while True:
+            sleep(5)
+            logging.info('main (after 5 sec sleep)...')
 
-        with db_lock:
-            print("\nin main; dumping _current_nmea_msg)",json.dumps(_current_nmea_msg))
+            with db_lock:
+                print("\nin main; dumping _current_nmea_msg)",json.dumps(_current_nmea_msg))
+    except (KeyboardInterrupt,SystemExit):
+        gps_update_thread.cancel()
+        print("...Terminated!")
+        print(f"Last {len(discardQ)} discarded messages were {discardQ}\n\n")
+
 
 #@app.route('/')
 #def mainGPS():
