@@ -12,7 +12,7 @@ from collections import deque
 import atexit
 import threading
 from flask import Flask,jsonify
-from copy import deepcopy
+import copy
 import logging
 
 GPS_CYCLE_TIME = 1
@@ -23,6 +23,8 @@ class nmea_msg(dict):
         self.__dict__ = self
     def __getattr__(self, attr):
         return self[attr]
+    def __deepcopy__(self, memo):
+        return nmea_msg(copy.deepcopy(dict(self)))
 
 _current_nmea_msg = nmea_msg(
      timestamp = datetime.now().timestamp(),
@@ -56,9 +58,9 @@ def parseGPS(raw_mesg, discardIt):
     if msg.sentence_type != 'GGA':
         discardQ.append(msg.sentence_type)
         if discardIt:
-           em="Discarded: %s" % msg.sentence_type
+            em=f"Discarded: {msg.sentence_type}, t/s: {msg.timestamp}"
         else:
-           em="Not-Discarded: %s" % msg.sentence_type
+            em=f"Not-Discarded: {msg.sentence_type}, t/s: {msg.timestamp}"
         logging.info('parseGPS: returning discarded NMEA message...%s' % em)
 #        return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M', got_fix=False,
 #           num_sats=0, error_msg=em))
@@ -68,7 +70,7 @@ def parseGPS(raw_mesg, discardIt):
         # (recall that gps_qual == 0 is 'no fix', or fix=False, 1 == fix, 2-5 are fix-other)
         logging.info('\nparseGPS: Newly parsed NMEA message before return')
         with db_lock:
-            _current_nmea_msg = deepcopy(nmea_msg(timestamp=msg.timestamp, lat=(msg.lat or 0.0), lat_dir=msg.lat_dir, lon=(msg.lon or 0.0), lon_dir=msg.lon_dir, 
+            _current_nmea_msg = copy.deepcopy(nmea_msg(timestamp=msg.timestamp, lat=(msg.lat or 0.0), lat_dir=msg.lat_dir, lon=(msg.lon or 0.0), lon_dir=msg.lon_dir, 
                altitude=(msg.altitude or 0.0), altitude_units=(msg.altitude_units or 'M'), got_fix=(msg.gps_qual==1), num_sats=0, error_msg=''))
         return msg
 
