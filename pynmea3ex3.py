@@ -3,7 +3,6 @@ import serial
 import pynmea2
 import json
 import time
-from __future__ import division
 from datetime import datetime, timedelta, timezone
 from collections import deque
 import argparse
@@ -61,7 +60,8 @@ def parseGPS(raw_mesg, discardIt):
     # if the msg-type IS GGA, return the timestamp/altitude-lat-lon, etc information
     if msg.sentence_type != 'GGA':
         m2 = dict(f2d(msg))
-        print(f"non-GGA timestamp is: {m2['Timestamp']}") if 'Timestamp' in m2
+        if 'Timestamp' in m2:
+            print(f"non-GGA timestamp is: {float(m2['Timestamp'])}") 
         discardQ.append(msg.sentence_type)
         if discardIt:
             em=f"Discarded: {msg.sentence_type}"
