@@ -55,6 +55,9 @@ def parseGPS(raw_mesg, discardIt):
 
     # if msg-type is not GGA, add the message to the discarded-Q and return appropriate error-message
     # if the msg-type IS GGA, return the timestamp/altitude-lat-lon, etc information
+    print(f"The data fields are: \n")
+    ['%s: %s' % (msg.fields[i][0], msg.data[i]) 
+                 for i in range(len(msg.fields))]
     if msg.sentence_type != 'GGA':
         discardQ.append(msg.sentence_type)
         if discardIt:
