@@ -41,7 +41,7 @@ _current_nmea_msg = nmea_msg(
      )
 
 # And... a handy little function for creating a list of name/data tuples from which we can instantiate a dictionary
-f2d = lambda m:  [(m.fields[i][0], m.data[i]) for i in range(len(m.fields))]
+f2d = lambda m:  [(m.fields[i][0], m.data[i]) for i in range(len(m.fields)-1)]
 
 # Given an NMEA input string (from attached GPS device), parse and either return it's T/S, 
 #       alt, lat/lon, etc (as a JSON dict) from the GGA message, add message-type to the 
@@ -82,10 +82,8 @@ def parseGPS(raw_mesg, discardIt):
         logging.info('\nparseGPS: New NMEA message before update')
         print(json.dumps(nmea_msg(timestamp=msg.timestamp, lat=(msg.lat or 0.0), lat_dir=msg.lat_dir, lon=(msg.lon or 0.0), lon_dir=msg.lon_dir, 
                altitude=(msg.altitude or 0.0), altitude_units=(msg.altitude_units or 'M'), got_fix=(msg.gps_qual==1), num_sats=0, error_msg='')))
-        logging.info('\nparseGPS: _current NMEA message before update')
-        print(_current_nmea_msg)
 #        with db_lock:
-            _current_nmea_msg = copy.deepcopy(nmea_msg(timestamp=msg.timestamp, lat=(msg.lat or 0.0), lat_dir=msg.lat_dir, lon=(msg.lon or 0.0), lon_dir=msg.lon_dir, 
+        _current_nmea_msg = copy.deepcopy(nmea_msg(timestamp=msg.timestamp, lat=(msg.lat or 0.0), lat_dir=msg.lat_dir, lon=(msg.lon or 0.0), lon_dir=msg.lon_dir, 
                altitude=(msg.altitude or 0.0), altitude_units=(msg.altitude_units or 'M'), got_fix=(msg.gps_qual==1), num_sats=0, error_msg=''))
         return msg
 
