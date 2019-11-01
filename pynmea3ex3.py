@@ -3,24 +3,18 @@ import serial
 import pynmea2
 import json
 import time
+from __future__ import division
+from datetime import datetime, timedelta, timezone
 from collections import deque
 import argparse
 from time import sleep
-from datetime import datetime, timedelta, timezone
+from collections import deque
 
 import atexit
 import threading
 from flask import Flask,jsonify
 import copy
 import logging
-import pdb
-
-def totimestamp(dt, epoch=datetime(1970,1,1, tzinfo=timezone.utc)):
-    tstamp = (dt - epoch) / timedelta(seconds=1)
-    return tstamp
-    # return td.total_seconds()
-#    return (td.microseconds + (td.seconds + td.days * 86400) * 10**6) / 10**6
-
 
 GPS_CYCLE_TIME = 1
 
@@ -47,6 +41,8 @@ _current_nmea_msg = nmea_msg(
      error_msg = ''
      )
 
+f2d = lambda m:  [(m.fields[i][0], m.data[i]) for i in range(len(m.fields))]
+
 # Given an NMEA input string (from attached GPS device), parse and either return it's T/S, 
 #       alt, lat/lon, etc (as a JSON dict) from the GGA message, add message-type to the 
 #       discardQ (based on command-line 'verbose' switch), finally returning JSON dict message), 
@@ -63,18 +59,14 @@ def parseGPS(raw_mesg, discardIt):
 
     # if msg-type is not GGA, add the message to the discarded-Q and return appropriate error-message
     # if the msg-type IS GGA, return the timestamp/altitude-lat-lon, etc information
-#    print(f"The data fields are: \n")
-#    ['%s: %s' % (msg.fields[i][0], msg.data[i]) 
-#                 for i in range(len(msg.fields))]
     if msg.sentence_type != 'GGA':
-        logging.info(f"parseGPS: non-GGA NMEA message-type is: {msg.sentence_type}, timestamp is: {msg.timestamp}")
-        logging.info(f"t/s type is: type(timestamp): {type(msg.timestamp)}")
-        logging.info(f"to-t/s is: {totimestamp(msg.timestamp)}")
+        m2 = dict(f2d(msg))
+        print(f"non-GGA timestamp is: {m2['Timestamp']}") if 'Timestamp' in m2
         discardQ.append(msg.sentence_type)
         if discardIt:
-            em=f"Discarded: {msg.sentence_type}, t/s: {totimestamp(msg.timestamp)}"
+            em=f"Discarded: {msg.sentence_type}"
         else:
-            em=f"Not-Discarded: {msg.sentence_type}, t/s: {totimestamp(msg.timestamp)}"
+            em=f"Not-Discarded: {msg.sentence_type}"
         logging.info('parseGPS: returning discarded NMEA message...%s' % em)
 #        return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M', got_fix=False,
 #           num_sats=0, error_msg=em))
@@ -101,7 +93,6 @@ def update_gps():
                 nmea_rxd_msg = parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v)
 #                    del nmea_rxd_msg
                 print("\njson.dumps() of updated _current_nmea_msg looks like:",json.dumps(_current_nmea_msg))
-                pdb.settrace()
     
     # process any system-exit errors or ^c received, outputting our discardQ contents 'before we go'
 #    except (KeyboardInterrupt,SystemExit):
