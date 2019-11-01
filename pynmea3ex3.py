@@ -64,9 +64,11 @@ def parseGPS(raw_mesg, discardIt):
         # ...so, let's check if the non-GGA message has a timestamp field 
         #    by turning NMEA msg into a dict & searching for 'Timestamp'
         m2 = dict(f2d(msg))
-        if 'Timestamp' in m2:
+        if 'Timestamp' in m2 and msg.timestamp != None:
             ts = m2['Timestamp']
             logging.info("non-GGA timestamp is: %s" % ts) 
+        else:
+            ts = datetime.now().timestamp()
 
         discardQ.append(msg.sentence_type)
         if discardIt:
