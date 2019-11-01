@@ -3,18 +3,24 @@ import serial
 import pynmea2
 import json
 import time
-from __future__ import division
-from datetime import datetime, timedelta
 from collections import deque
 import argparse
 from time import sleep
-from collections import deque
+from datetime import datetime, timedelta, timezone
 
 import atexit
 import threading
 from flask import Flask,jsonify
 import copy
 import logging
+import pdb
+
+def totimestamp(dt, epoch=datetime(1970,1,1, tzinfo=timezone.utc)):
+    tstamp = (dt - epoch) / timedelta(seconds=1)
+    return tstamp
+    # return td.total_seconds()
+#    return (td.microseconds + (td.seconds + td.days * 86400) * 10**6) / 10**6
+
 
 GPS_CYCLE_TIME = 1
 
@@ -41,11 +47,6 @@ _current_nmea_msg = nmea_msg(
      error_msg = ''
      )
 
-def totimestamp(dt, epoch=datetime(1970,1,1)):
-        td = dt - epoch
-            # return td.total_seconds()
-                return (td.microseconds + (td.seconds + td.days * 86400) * 10**6) / 10**6
-
 # Given an NMEA input string (from attached GPS device), parse and either return it's T/S, 
 #       alt, lat/lon, etc (as a JSON dict) from the GGA message, add message-type to the 
 #       discardQ (based on command-line 'verbose' switch), finally returning JSON dict message), 
@@ -66,6 +67,9 @@ def parseGPS(raw_mesg, discardIt):
 #    ['%s: %s' % (msg.fields[i][0], msg.data[i]) 
 #                 for i in range(len(msg.fields))]
     if msg.sentence_type != 'GGA':
+        logging.info(f"parseGPS: non-GGA NMEA message-type is: {msg.sentence_type}, timestamp is: {msg.timestamp}")
+        logging.info(f"t/s type is: type(timestamp): {type(msg.timestamp)}")
+        logging.info(f"to-t/s is: {totimestamp(msg.timestamp)}")
         discardQ.append(msg.sentence_type)
         if discardIt:
             em=f"Discarded: {msg.sentence_type}, t/s: {totimestamp(msg.timestamp)}"
@@ -97,6 +101,7 @@ def update_gps():
                 nmea_rxd_msg = parseGPS(gIn.readline().decode('ascii', errors='replace'), results.v)
 #                    del nmea_rxd_msg
                 print("\njson.dumps() of updated _current_nmea_msg looks like:",json.dumps(_current_nmea_msg))
+                pdb.settrace()
     
     # process any system-exit errors or ^c received, outputting our discardQ contents 'before we go'
 #    except (KeyboardInterrupt,SystemExit):
