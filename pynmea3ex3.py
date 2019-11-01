@@ -3,7 +3,8 @@ import serial
 import pynmea2
 import json
 import time
-from datetime import datetime
+from __future__ import division
+from datetime import datetime, timedelta
 from collections import deque
 import argparse
 from time import sleep
@@ -17,6 +18,7 @@ import logging
 
 GPS_CYCLE_TIME = 1
 
+# Also overriding deepcopy to add to class-methods
 class nmea_msg(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -39,6 +41,11 @@ _current_nmea_msg = nmea_msg(
      error_msg = ''
      )
 
+def totimestamp(dt, epoch=datetime(1970,1,1)):
+        td = dt - epoch
+            # return td.total_seconds()
+                return (td.microseconds + (td.seconds + td.days * 86400) * 10**6) / 10**6
+
 # Given an NMEA input string (from attached GPS device), parse and either return it's T/S, 
 #       alt, lat/lon, etc (as a JSON dict) from the GGA message, add message-type to the 
 #       discardQ (based on command-line 'verbose' switch), finally returning JSON dict message), 
@@ -55,15 +62,15 @@ def parseGPS(raw_mesg, discardIt):
 
     # if msg-type is not GGA, add the message to the discarded-Q and return appropriate error-message
     # if the msg-type IS GGA, return the timestamp/altitude-lat-lon, etc information
-    print(f"The data fields are: \n")
-    ['%s: %s' % (msg.fields[i][0], msg.data[i]) 
-                 for i in range(len(msg.fields))]
+#    print(f"The data fields are: \n")
+#    ['%s: %s' % (msg.fields[i][0], msg.data[i]) 
+#                 for i in range(len(msg.fields))]
     if msg.sentence_type != 'GGA':
         discardQ.append(msg.sentence_type)
         if discardIt:
-            em=f"Discarded: {msg.sentence_type}, t/s: {msg.timestamp}"
+            em=f"Discarded: {msg.sentence_type}, t/s: {totimestamp(msg.timestamp)}"
         else:
-            em=f"Not-Discarded: {msg.sentence_type}, t/s: {msg.timestamp}"
+            em=f"Not-Discarded: {msg.sentence_type}, t/s: {totimestamp(msg.timestamp)}"
         logging.info('parseGPS: returning discarded NMEA message...%s' % em)
 #        return ( nmea_msg(timestamp = datetime.now().timestamp(), lat=0.0, lat_dir='0', lon=0.0, lon_dir='0', altitude=0.0, altitude_units='M', got_fix=False,
 #           num_sats=0, error_msg=em))
